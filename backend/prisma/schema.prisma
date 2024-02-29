@@ -26,7 +26,9 @@ model User {
   breakeInterval Int? @default(10) @map("breake_interval")
   intervalCount  Int? @default(7) @map("interval_count")
 
-  tasks Task[]
+  tasks            Task[]
+  timeBlocks       TimeBlock[]
+  pomodoroSessions PomodoroSession[]
 
   @@map("user")
 }
@@ -38,10 +40,54 @@ model Task {
 
   name        String
   priority    Priority?
-  isCompleted Boolean   @default(false) @map("is_completed")
+  isCompleted Boolean?  @default(false) @map("is_completed")
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @map("user_id")
 
   @@map("task")
+}
+
+model TimeBlock {
+  id       String   @id @default(cuid())
+  createAt DateTime @default(now()) @map("create_at")
+  updateAt DateTime @updatedAt @map("update_at")
+
+  name     String
+  color    String?
+  duration Int
+  order    Int     @default(1)
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  @@map("time_block")
+}
+
+model PomodoroSession {
+  id       String   @id @default(cuid())
+  createAt DateTime @default(now()) @map("create_at")
+  updateAt DateTime @updatedAt @map("update_at")
+
+  isCompleted Boolean? @default(false) @map("is_completed")
+
+  user   User            @relation(fields: [userId], references: [id])
+  userId String          @map("user_id")
+  rounds PomodoroRound[]
+
+  @@map("pomodoro_session")
+}
+
+model PomodoroRound {
+  id       String   @id @default(cuid())
+  createAt DateTime @default(now()) @map("create_at")
+  updateAt DateTime @updatedAt @map("update_at")
+
+  totalSeconds Int      @map("total_seconds")
+  isCompleted  Boolean? @default(false) @map("is_completed")
+
+  pomodoroSesiosns  PomodoroSession @relation(fields: [pomodoroSessionId], references: [id], onDelete: Cascade)
+  pomodoroSessionId String          @map("pomodoro_session_id")
+
+  @@map("pomodoro_round")
 }
