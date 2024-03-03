@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { UserService } from 'src/user/user.service'
 import { AuthDto } from './dto/auth.dto'
@@ -7,8 +12,8 @@ import { Response } from 'express'
 
 @Injectable()
 export class AuthService {
-  EXPIRE_DATE_REFRESH_TOKEN = 1
-  REFRESH_TOKEN_NAME = 'refreshToken'
+	EXPIRE_DATE_REFRESH_TOKEN = 1
+	REFRESH_TOKEN_NAME = 'refreshToken'
 
 	constructor(
 		private jwt: JwtService,
@@ -17,96 +22,96 @@ export class AuthService {
 
 	async login(dto: AuthDto) {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const {password, ...user} = await this.validateUser(dto)
+		const { password, ...user } = await this.validateUser(dto)
 
-    const tokens = this.issueTokens(user.id)
+		const tokens = this.issueTokens(user.id)
 
-    return {
-      user,
-      ...tokens
-    }
+		return {
+			user,
+			...tokens
+		}
 	}
-  
+
 	async register(dto: AuthDto) {
-    const oldUser = await this.userService.getByEmail(dto.email)
+		const oldUser = await this.userService.getByEmail(dto.email)
 
-    if(oldUser) throw new BadRequestException('User already exists')
+		if (oldUser) throw new BadRequestException('User already exists')
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {password, ...user} = await this.userService.create(dto)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { password, ...user } = await this.userService.create(dto)
 
-    const tokens = this.issueTokens(user.id)
+		const tokens = this.issueTokens(user.id)
 
-    return {
-      user,
-      ...tokens
-    }
+		return {
+			user,
+			...tokens
+		}
 	}
 
-  async getNewTokens(refreshToken: string) {
-    const result = await this.jwt.verifyAsync(refreshToken)
-    if(!result) throw new UnauthorizedException('Invalid refresh token')
+	async getNewTokens(refreshToken: string) {
+		const result = await this.jwt.verifyAsync(refreshToken)
+		if (!result) throw new UnauthorizedException('Invalid refresh token')
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const {password, ...user} = await this.userService.getById(result.id)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { password, ...user } = await this.userService.getById(result.id)
 
-    // FIXME: user.id?????
-    const tokens = this.issueTokens(user.id)
+		// FIXME: user.id?????
+		const tokens = this.issueTokens(user.id)
 
-    return {
-      user,
-      ...tokens
-    }
-  }
+		return {
+			user,
+			...tokens
+		}
+	}
 
-  private issueTokens(userId: string) {
-    const data = {id: userId}
+	private issueTokens(userId: string) {
+		const data = { id: userId }
 
-    const accessToken = this.jwt.sign(data, {
-      expiresIn: '1h'
-    })
+		const accessToken = this.jwt.sign(data, {
+			expiresIn: '1h'
+		})
 
-    const refreshToken = this.jwt.sign(data, {
-      expiresIn: '3d'
-    })
-    
-  return {accessToken, refreshToken}
-  }
+		const refreshToken = this.jwt.sign(data, {
+			expiresIn: '3d'
+		})
 
-  private async validateUser(dto: AuthDto) {
-    const user = await this.userService.getByEmail(dto.email)
+		return { accessToken, refreshToken }
+	}
 
-    if(!user) throw new NotFoundException('User not found')
+	private async validateUser(dto: AuthDto) {
+		const user = await this.userService.getByEmail(dto.email)
 
-    const isValid = await verify(user.password, dto.password)
+		if (!user) throw new NotFoundException('User not found')
 
-    if(!isValid) throw new UnauthorizedException('password is not valid')
+		const isValid = await verify(user.password, dto.password)
 
-    return user
-  }
+		if (!isValid) throw new UnauthorizedException('password is not valid')
 
-  addRefreshTokenToResponse(res: Response, refreshToken: string) {
-    const expiresIn = new Date()
-    expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DATE_REFRESH_TOKEN)
+		return user
+	}
 
-    res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
-      httpOnly: true,
-      // FIXME: in production
-      domain: 'localhost',
-      expires: expiresIn,
-      secure: true,
-      //FIXME: lax in production
-      sameSite: 'none'
-    })
-  }
+	addRefreshTokenToResponse(res: Response, refreshToken: string) {
+		const expiresIn = new Date()
+		expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DATE_REFRESH_TOKEN)
 
-  removeRefreshTokenToResponse(res: Response) {
-    res.cookie(this.REFRESH_TOKEN_NAME, '', {
-      httpOnly: true,
-      domain: 'localhost',
-      expires: new Date(0),
-      secure: true,
-      sameSite: 'none'
-    })
-  }
+		res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
+			httpOnly: true,
+			// FIXME: in production
+			domain: 'localhost',
+			expires: expiresIn,
+			secure: true,
+			//FIXME: lax in production
+			sameSite: 'none'
+		})
+	}
+
+	removeRefreshTokenToResponse(res: Response) {
+		res.cookie(this.REFRESH_TOKEN_NAME, '', {
+			httpOnly: true,
+			domain: 'localhost',
+			expires: new Date(0),
+			secure: true,
+			sameSite: 'none'
+		})
+	}
 }
