@@ -91,11 +91,17 @@ export class UserService {
       data = {...dto, password: await hash(dto.password)}
     }
 
+  
+
     return this.prisma.user.update({
       where: {
         id
       },
-      data
+      data,
+      select: {
+        name: true,
+        email: true
+      }
     })
   } 
 }
