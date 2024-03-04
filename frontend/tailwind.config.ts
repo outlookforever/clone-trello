@@ -1,5 +1,5 @@
 
-import { COLORS } from '@/constants/colors.constants'
+import { COLORS } from './src/constants/colors.constants'
 import type { Config } from 'tailwindcss'
 
 
