@@ -62,7 +62,7 @@ export class UserService {
 
 		return {
 			user: rest,
-			statics: [
+			statistics: [
 				{ label: 'Total', value: totalTasks },
 				{ label: 'Completed tasks', value: completedTasks },
 				{ label: 'Today tasks', value: todayTasks },
